@@ -1,4 +1,4 @@
-# Nutrition Ward Quest 🩺
+# NutrimedDx ward quest 🩺
 
 A browser game that helps nutrition and dietetics students learn clinical nutrition. It is a single `index.html` file with no build step and no dependencies.
 
