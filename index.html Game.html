@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nutrition Ward Quest – Clinical Nutrition &amp; Dietetics Game</title>
+<style>
+:root{--bg:#f3f6f8;--card:#fff;--ink:#1c2733;--mut:#677482;--pri:#0b6e75;--pri2:#dff0f1;--ok:#166534;--okbg:#dcfce7;--bad:#b91c1c;--badbg:#fee2e2;--warn:#92400e;--warnbg:#fef3c7;--line:#dbe2e8;--gold:#d97706}
+@media (prefers-color-scheme:dark){:root{--bg:#10171d;--card:#18222b;--ink:#e6edf2;--mut:#93a1ae;--pri:#4fc3c9;--pri2:#16363a;--ok:#86efac;--okbg:#12301d;--bad:#fca5a5;--badbg:#3b1a1a;--warn:#fcd34d;--warnbg:#3a2e10;--line:#2a3743;--gold:#fbbf24}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--pri);color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+@media (prefers-color-scheme:dark){header{background:#0c4a4f}}
+header h1{margin:0;font-size:18px;cursor:pointer}
+.xp{font-size:13px;min-width:200px}
+.bar{height:8px;background:rgba(255,255,255,.3);border-radius:6px;overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;background:#fcd34d}
+main{max-width:780px;margin:0 auto;padding:16px 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 8px;font-size:19px}
+.muted{color:var(--mut)}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.mode{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;color:inherit;font:inherit}
+.mode:hover,.mode:focus-visible{border-color:var(--pri);outline:2px solid var(--pri2)}
+.mode b{display:block;font-size:17px;margin-bottom:2px}
+.mode span{font-size:13.5px;color:var(--mut)}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:10px 18px;font:inherit;cursor:pointer}
+@media (prefers-color-scheme:dark){.btn{color:#062a2d}}
+.btn.sec{background:var(--pri2);color:var(--pri)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.prog{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}
+.prog i{display:block;height:100%;background:var(--pri)}
+.q{font-size:18px;margin:6px 0 12px}
+.opt{display:block;width:100%;text-align:left;background:var(--card);color:inherit;border:2px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:8px;font:inherit;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--pri)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--okbg)}
+.opt.wrong{border-color:var(--bad);background:var(--badbg)}
+.fb{padding:10px 12px;border-radius:8px;margin:10px 0;font-size:15px}
+.fb.ok{background:var(--okbg);color:var(--ok)}
+.fb.no{background:var(--badbg);color:var(--bad)}
+.fb p{margin:4px 0 0;color:var(--ink)}
+.case{border-left:4px solid var(--pri);background:var(--pri2);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:15px}
+.case h3{margin:0 0 6px;font-size:16px}
+.case p{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:6px}
+td,th{padding:4px 8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mut);font-size:12px}
+.H{color:var(--bad);font-weight:700}.L{color:var(--warn);font-weight:700}
+.tag{display:inline-block;background:var(--pri2);color:var(--pri);border-radius:10px;padding:1px 9px;font-size:12px}
+.badge{display:inline-block;border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:2px 10px;margin:3px 4px 3px 0;font-size:13px}
+.lives{letter-spacing:2px}
+input[type=search]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card);color:inherit}
+dt{font-weight:700;margin-top:10px}dd{margin:0;color:var(--mut)}
+.big{font-size:40px;font-weight:700;color:var(--pri)}
+.rev{border-top:1px solid var(--line);padding:10px 0;font-size:15px}
+footer{max-width:780px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="home">🩺 Nutrition Ward Quest</h1>
+  <div class="xp" id="xp"></div>
+</header>
+<main id="app"></main>
+<footer>Educational game for students. Cases are fictional. Doses and targets reflect common adult or WHO reference values and may differ between guidelines; always verify against your local formulary and protocols. Not for clinical decision-making.</footer>
+
+<script>
+"use strict";
+/* ================= DATA ================= */
+// [term, definition]
+const JARGON = [
+["Dysphagia","Difficulty swallowing"],
+["Odynophagia","Painful swallowing"],
+["Steatorrhoea","Pale, bulky, foul-smelling fatty stools caused by fat malabsorption"],
+["Cachexia","Wasting syndrome with muscle loss driven by disease and inflammation, not fully reversed by feeding alone"],
+["Sarcopenia","Progressive loss of skeletal muscle mass and strength"],
+["Marasmus","Severe malnutrition from energy deficiency with marked wasting and no oedema"],
+["Kwashiorkor","Severe malnutrition with bilateral pitting oedema"],
+["Ascites","Accumulation of fluid in the peritoneal (abdominal) cavity"],
+["Azotaemia","Raised urea and other nitrogen waste products in the blood"],
+["Hyperemesis","Severe, persistent vomiting"],
+["Glossitis","Inflamed, smooth, sore tongue, often seen with iron, B12 or folate deficiency"],
+["Cheilosis","Cracking and soreness at the corners of the mouth, linked to B-vitamin or iron deficiency"],
+["Dyspepsia","Upper abdominal discomfort or indigestion"],
+["Glycosuria","Presence of glucose in the urine"],
+["Ketonuria","Presence of ketones in the urine"],
+["Hypokalaemia","Low blood potassium"],
+["Hyperkalaemia","High blood potassium"],
+["Hyperphosphataemia","High blood phosphate, common in advanced chronic kidney disease"],
+["Hyponatraemia","Low blood sodium"],
+["Enteral nutrition","Feeding via the gastrointestinal tract, for example by a feeding tube"],
+["Parenteral nutrition","Nutrients given intravenously, bypassing the gut"],
+["Malabsorption","Impaired absorption of nutrients across the gut"],
+["Anthropometry","Body measurements such as weight, height, MUAC and skinfold thickness"],
+["MUAC","Mid-upper arm circumference, used to screen for malnutrition"],
+["Oedema","Excess fluid in the tissues causing swelling"],
+["Dumping syndrome","Symptoms caused by rapid gastric emptying after gastric surgery"],
+["Gastroparesis","Delayed stomach emptying without a mechanical blockage"],
+["Polyuria","Passing abnormally large volumes of urine"],
+["Polydipsia","Excessive thirst"],
+["Hepatic encephalopathy","Brain dysfunction from liver failure, causing confusion and a flapping tremor"],
+["Nil by mouth (NBM)","Nothing to be eaten or drunk"],
+["Dysgeusia","Altered or distorted sense of taste"],
+["Anorexia","Loss of appetite"],
+["Hypoalbuminaemia","Low serum albumin, reflecting inflammation, fluid shifts or liver disease more than diet alone"],
+["Cholestasis","Reduced or blocked flow of bile"],
+["Refeeding syndrome","Dangerous fluid and electrolyte shifts (low phosphate, potassium, magnesium) when feeding restarts in the malnourished"],
+["Hyperglycaemia","High blood glucose"],
+["Aspiration","Inhalation of food, fluid or stomach contents into the airway"],
+["Bolus feeding","Tube feed given in set volumes over short periods at intervals"],
+["Satiety","The feeling of fullness after eating"],
+["Dyslipidaemia","Abnormal blood lipid levels, such as high triglycerides or LDL cholesterol"],
+["Hepatomegaly","Enlargement of the liver"],
+["Xerophthalmia","Dry eye disease caused by vitamin A deficiency"],
+["Rickets","Defective bone mineralisation in children, most often from vitamin D deficiency"]
+];
+
+// [question, right, [wrong x3], explanation]
+const COND = [
+["A patient with stage 4 CKD has a serum potassium of 6.1 mmol/L. Which dietary advice is most appropriate?","Limit high-potassium foods (bananas, potatoes, tomatoes) and avoid potassium-based salt substitutes",["Drink extra fruit juice and coconut water for hydration","Switch to a potassium-based 'lo-salt' substitute","Snack on dried fruit between meals"],"Potassium is restricted when it is high in CKD. KCl salt substitutes are especially dangerous. Boiling and draining vegetables lowers their potassium."],
+["Which nutrient is commonly restricted in advanced CKD to control hyperphosphataemia?","Phosphate (processed foods, colas, additives)",["Vitamin C","Dietary fibre","Iron"],"Phosphate additives in processed food are almost fully absorbed. Binders are taken with meals alongside dietary restriction."],
+["Compared with healthy adults, protein needs for patients on maintenance haemodialysis are generally:","Higher, about 1.0–1.2 g/kg/day",["Much lower, about 0.3 g/kg/day","The same, 0.8 g/kg/day, with extra being harmful","Restricted to under 0.6 g/kg/day"],"Dialysis removes amino acids and causes catabolism, so protein targets rise. Protein restriction applies to non-dialysis CKD."],
+["A man with compensated cirrhosis and sarcopenia asks whether to cut protein to protect his liver. Best advice?","No. Aim for about 1.2–1.5 g/kg/day protein plus a late-evening snack to limit overnight catabolism",["Yes, restrict to 0.5 g/kg/day","Fast overnight and eat one large meal daily","Replace protein with fat only"],"Cirrhosis is a catabolic state. Protein restriction worsens muscle loss and does not prevent encephalopathy."],
+["Dietary sodium advice for a patient with cirrhotic ascites:","About 2 g sodium (roughly 5 g salt) per day",["No restriction; add salt to maintain blood pressure","Under 0.2 g sodium per day","Restrict fluids to 500 mL daily for everyone"],"Moderate sodium restriction helps control ascites. Fluid restriction is only used for severe hyponatraemia."],
+["Which grains must be avoided in coeliac disease?","Wheat, barley and rye",["Rice, maize and millet","Quinoa, buckwheat and amaranth","Sorghum, teff and rice"],"Gluten is found in wheat, barley and rye. The other grains listed are naturally gluten-free, though cross-contamination matters."],
+["A severely malnourished patient at high refeeding risk is to start feeding. Safest approach?","Start low (about 10 kcal/kg/day), give thiamine, replace electrolytes, and increase over 4–7 days",["Start at full estimated requirements to reverse malnutrition quickly","Start with high-dose IV dextrose","Delay thiamine until phosphate normalises"],"Slow, cautious feeding with thiamine and electrolyte monitoring prevents refeeding syndrome."],
+["In severe acute pancreatitis needing nutrition support, the preferred route is:","Early enteral feeding (within 24–72 h) when oral intake is not possible",["Parenteral nutrition as first-line","Nil by mouth for at least two weeks","A high-fat oral diet"],"Enteral feeding maintains gut barrier function and reduces infection compared with parenteral nutrition."],
+["Key safety measure for oropharyngeal dysphagia with aspiration risk:","Texture-modified diet and thickened fluids at the level set by the speech and language therapist",["Thin fluids through a straw to speed swallowing","Lie flat while eating","Offer dry, crumbly foods to stimulate swallowing"],"Texture and fluid consistency are matched to the swallowing assessment, for example using IDDSI levels."],
+["Dietary advice for early dumping syndrome after gastrectomy:","Small frequent meals, limit simple sugars, and separate drinks from meals by about 30 minutes",["Large meals with plenty of fluids","Sugary drinks to maintain energy","Eat quickly to shorten time in the stomach"],"Smaller, drier, low-sugar meals slow gastric emptying and reduce the osmotic load reaching the small bowel."],
+["In children with active Crohn's disease, which nutrition therapy can induce remission?","Exclusive enteral nutrition for 6–8 weeks",["A low-protein diet","A gluten-free diet","Parenteral nutrition only"],"Exclusive enteral nutrition is a first-line remission therapy in paediatric Crohn's disease."],
+["Phenylketonuria management requires restricting:","Phenylalanine (natural protein and aspartame)",["Galactose (milk sugar)","Gluten","Purines"],"PKU is a deficiency of phenylalanine hydroxylase. Diet restricts phenylalanine and uses a special amino acid formula."],
+["Dietary advice for gout includes:","Limit alcohol (especially beer), purine-rich organ meats and fructose-sweetened drinks",["Avoid all fruit and vegetables","Fast for several days","Increase red meat and shellfish"],"These items raise uric acid. Weight loss, hydration and low-fat dairy help."],
+["Which tip helps absorption of non-haem iron from a plant-based meal?","Add vitamin C-rich foods such as citrus or peppers",["Drink strong tea with the meal","Take a calcium supplement with it","Add extra bran"],"Vitamin C helps convert iron to the better-absorbed form. Tannins, phytates and calcium reduce absorption."],
+["Typical protein target for a malnourished patient with pressure ulcers, if renal function allows:","1.25–1.5 g/kg/day",["0.4 g/kg/day","0.8 g/kg/day only, as extra is harmful","3 g/kg/day"],"Wound healing raises protein requirements. Check renal and hepatic function first."],
+["A conscious patient on insulin has a glucose of 3.2 mmol/L and is symptomatic. First step?","15–20 g fast-acting carbohydrate (for example 150–200 mL juice or glucose tablets), then recheck in 15 minutes",["A chocolate bar, because it has more calories","Give an extra insulin dose","Wait and recheck in an hour"],"Fat slows glucose absorption, so use simple sugars. Follow with a longer-acting carbohydrate once glucose recovers."],
+["Which tool screens adults for malnutrition risk using BMI, unplanned weight loss and acute illness effect?","MUST (Malnutrition Universal Screening Tool)",["APGAR score","Glasgow Coma Scale","Bristol Stool Chart"],"MUST is a five-step screening tool widely used in hospitals and the community."],
+["A child aged 18 months has a MUAC of 10.5 cm. Classification?","Severe acute malnutrition",["Normal nutritional status","Moderate acute malnutrition","Overweight"],"In children 6–59 months, MUAC below 11.5 cm indicates severe acute malnutrition and 11.5–12.5 cm indicates moderate."],
+["First-line fluid for a child with some dehydration from acute diarrhoea:","Low-osmolarity oral rehydration solution (ORS)",["Undiluted fruit juice","Plain water only","Fizzy drinks"],"Juices and sodas have high osmolarity and can worsen diarrhoea. ORS uses glucose–sodium co-transport."],
+["Which measure lowers aspiration risk during tube feeding?","Keep the head of the bed raised at least 30–45° during and after feeds",["Lie the patient flat during feeds","Give all feeds as rapid boluses","Stop checking tube position"],"Upright positioning reduces reflux and aspiration of feed."]
+];
+
+// cases
+const CASES = [
+{title:"Case: the pale, bloated woman",pt:"28-year-old woman",hx:"8 months of loose, pale stools and bloating. Lost 5 kg. Her mother has autoimmune thyroid disease.",sx:"Fatigue, recurrent mouth ulcers, itchy blistering rash on the elbows.",
+ labs:[["Haemoglobin","9.8 g/dL","12–15","L"],["MCV","74 fL","80–100","L"],["Ferritin","6 µg/L","15–150","L"],["tTG-IgA","More than 10× upper limit","Negative",""],["Total IgA","Normal","Normal",""],["Albumin","33 g/L","35–50","L"]],
+ dx:{right:"Coeliac disease",wrongs:["Irritable bowel syndrome","Lactose intolerance","Hyperthyroidism"],why:"Malabsorption with iron-deficiency anaemia, a high tTG-IgA and dermatitis herpetiformis point to coeliac disease. Biopsy usually confirms."},
+ plan:{q:"What is the correct dietary plan?",right:"Strict lifelong gluten-free diet, started after the diagnosis is confirmed while she keeps eating gluten until then",wrongs:["Start a gluten-free diet immediately, before any testing","Lactose-free diet only","Low-FODMAP diet for life"],why:"Gluten must remain in the diet until testing is complete, otherwise results can be falsely negative. Treat iron deficiency and review bone health."}},
+{title:"Case: weak and confused after feeding began",pt:"34-year-old man",hx:"Heavy alcohol use, little food for about 10 days. BMI 14.2. Admitted with pneumonia and started on NG feeding at full requirements.",sx:"Day 2: generalised weakness, palpitations, ankle oedema and confusion.",
+ labs:[["Phosphate","0.35 mmol/L","0.8–1.5","L"],["Potassium","2.8 mmol/L","3.5–5.0","L"],["Magnesium","0.45 mmol/L","0.7–1.0","L"],["Glucose","6.0 mmol/L","4–7",""]],
+ dx:{right:"Refeeding syndrome",wrongs:["Sepsis","Diabetic ketoacidosis","Hyperosmolar hyperglycaemic state"],why:"Low phosphate, potassium and magnesium within days of restarting nutrition in a starved patient are classic refeeding syndrome."},
+ plan:{q:"What is the immediate priority?",right:"Reduce the feed rate, give IV thiamine, replace phosphate, potassium and magnesium with monitoring, then re-advance slowly",wrongs:["Increase the feed rate to fix the energy deficit","Stop all nutrition and give dextrose only","Give high-dose vitamin C"],why:"Slow down energy delivery, give thiamine, correct electrolytes and monitor closely."}},
+{title:"Case: thirsty, drowsy and breathing deeply",pt:"19-year-old man",hx:"3 weeks of polyuria and thirst with 6 kg weight loss. 2 days of nausea and abdominal pain.",sx:"Drowsy, deep rapid breathing, fruity-smelling breath, dry mucous membranes.",
+ labs:[["Glucose","29 mmol/L","4–7","H"],["pH","7.08","7.35–7.45","L"],["Bicarbonate","7 mmol/L","22–29","L"],["Blood ketones","5.6 mmol/L","<0.6","H"],["Potassium","5.4 mmol/L","3.5–5.0","H"]],
+ dx:{right:"Diabetic ketoacidosis",wrongs:["Hyperosmolar hyperglycaemic state","Starvation ketosis","Lactic acidosis"],why:"High glucose with high ketones and metabolic acidosis defines DKA. Starvation ketosis has normal glucose and no severe acidosis."},
+ plan:{q:"Which is the key initial management?",right:"IV fluids and fixed-rate IV insulin, with potassium monitored and replaced",wrongs:["Oral carbohydrate loading","IV bicarbonate bolus as first-line","Withhold fluids"],why:"Fluids and insulin are the foundation. Potassium falls once insulin starts, so it is replaced early. Dextrose is added when glucose falls to about 14 mmol/L."}},
+{title:"Case: unsteady and confused",pt:"47-year-old man",hx:"Alcohol dependence with a poor diet. Found confused and unable to walk steadily.",sx:"Horizontal nystagmus, wide-based ataxic gait and disorientation.",
+ labs:[["Glucose","5.2 mmol/L","4–7",""],["Magnesium","0.6 mmol/L","0.7–1.0","L"],["MCV","105 fL","80–100","H"],["Erythrocyte transketolase activity","Low","Normal","L"]],
+ dx:{right:"Wernicke encephalopathy (thiamine deficiency)",wrongs:["Hypoglycaemia","Hepatic encephalopathy","Hyperkalaemia"],why:"The triad of confusion, ataxia and eye signs in an alcohol-dependent, malnourished patient suggests thiamine deficiency. Normal glucose rules out hypoglycaemia."},
+ plan:{q:"What is the correct treatment sequence?",right:"Give IV thiamine before or with any glucose-containing fluid, and correct magnesium",wrongs:["Glucose infusion first, thiamine only if no improvement","Oral multivitamin alone","Fluid restriction and lactulose"],why:"Glucose given without thiamine can precipitate or worsen Wernicke encephalopathy. Magnesium is a thiamine cofactor."}},
+{title:"Case: sore tongue and tingling feet",pt:"62-year-old woman",hx:"8 months of fatigue, a sore tongue and tingling in both feet. She has autoimmune thyroid disease and eats meat normally.",sx:"Pale, smooth beefy-red tongue, reduced vibration sense in the feet.",
+ labs:[["Haemoglobin","8.4 g/dL","12–15","L"],["MCV","114 fL","80–100","H"],["Vitamin B12","78 pg/mL","200–900","L"],["Folate","Normal","Normal",""],["Anti-intrinsic factor antibody","Positive","Negative","H"]],
+ dx:{right:"Vitamin B12 deficiency (pernicious anaemia)",wrongs:["Iron-deficiency anaemia","Folate deficiency","Anaemia of chronic disease"],why:"Macrocytic anaemia with neurological signs, low B12 and anti-intrinsic factor antibodies shows autoimmune B12 malabsorption."},
+ plan:{q:"What is the best treatment?",right:"Hydroxocobalamin IM injections (loading, then maintenance), since diet alone cannot correct malabsorption",wrongs:["Oral folic acid alone","Oral ferrous sulfate","Dietary advice to eat more fruit"],why:"Folic acid alone can improve the blood count but let neurological damage progress. B12 must be replaced by injection when absorption is impaired."}},
+{title:"Case: swollen feet and thin hair",pt:"2-year-old girl in a rural village",hx:"Weaned at 14 months onto maize porridge with little animal protein or legumes. 2 weeks of swelling and irritability with poor appetite.",sx:"Bilateral pitting oedema to the knees, sparse reddish hair, flaky skin patches. Urine dipstick: no protein.",
+ labs:[["Albumin","18 g/L","35–50","L"],["Haemoglobin","8.1 g/dL","11–14","L"],["Glucose","3.4 mmol/L","3.5–5.5","L"],["Urine protein","Negative","Negative",""]],
+ dx:{right:"Kwashiorkor",wrongs:["Marasmus","Nephrotic syndrome","Congestive heart failure"],why:"Bilateral pitting oedema with skin and hair changes and a poor diet indicates kwashiorkor. No proteinuria argues against nephrotic syndrome."},
+ plan:{q:"Which management is appropriate?",right:"Treat as severe acute malnutrition: treat hypoglycaemia, give F-75 then F-100 or RUTF per protocol in small frequent feeds, and avoid diuretics",wrongs:["High-protein, high-salt feeds with a diuretic","Rapid IV fluid boluses for 'dehydration'","Fast for 24 hours"],why:"WHO protocols start cautiously with low-lactose, low-protein F-75. Diuretics and rapid IV fluids are dangerous in malnourished children."}},
+{title:"Case: weakness and palpitations on a kidney diet",pt:"63-year-old man",hx:"CKD stage 4 (eGFR 18) and diabetes. He uses a potassium-based salt substitute, eats bananas daily, and takes ramipril.",sx:"Muscle weakness and palpitations. ECG shows peaked T waves.",
+ labs:[["Potassium","6.7 mmol/L","3.5–5.0","H"],["Creatinine","340 µmol/L","60–110","H"],["Bicarbonate","18 mmol/L","22–29","L"]],
+ dx:{right:"Hyperkalaemia",wrongs:["Hyponatraemia","Hypocalcaemia","Hypermagnesaemia"],why:"Raised potassium with ECG changes in a CKD patient taking an ACE inhibitor and a potassium-rich diet. This needs urgent medical treatment."},
+ plan:{q:"Which dietary change belongs in long-term management?",right:"Avoid KCl salt substitutes and limit high-potassium foods, with a dietitian-led renal diet review",wrongs:["Increase fruit and vegetable juice","Switch to a potassium-rich 'heart-healthy' salt","Unlimited dairy and nuts"],why:"Dietary potassium control complements medication review and, where needed, potassium binders."}},
+{title:"Case: swollen belly and wasted limbs",pt:"55-year-old man",hx:"15 years of heavy alcohol use. Abdominal swelling, ankle oedema and weight loss with visible muscle wasting.",sx:"Jaundice, spider naevi, palmar erythema, shifting dullness (ascites), temporal wasting.",
+ labs:[["Albumin","24 g/L","35–50","L"],["Bilirubin","68 µmol/L","<21","H"],["INR","1.7","0.9–1.2","H"],["Platelets","90 ×10⁹/L","150–400","L"],["Sodium","131 mmol/L","135–145","L"]],
+ dx:{right:"Decompensated alcohol-related cirrhosis",wrongs:["Nephrotic syndrome","Congestive heart failure only","Acute pancreatitis"],why:"Stigmata of chronic liver disease, ascites, low albumin, prolonged INR and low platelets indicate decompensated cirrhosis with portal hypertension."},
+ plan:{q:"Which nutrition plan is appropriate?",right:"Protein 1.2–1.5 g/kg/day, 4–6 small meals including a late-evening snack, and about 2 g sodium per day",wrongs:["Protein restriction to 0.5 g/kg/day to prevent encephalopathy","Long fasting between meals","High-sodium diet to correct low sodium"],why:"Malnutrition and sarcopenia worsen outcomes. Avoid long fasting and protein restriction, and restrict sodium for ascites."}},
+{title:"Case: bowed legs in a toddler",pt:"3-year-old boy",hx:"Breastfed to 18 months, then a mostly cereal diet with little dairy. Very little sun exposure. Late to walk.",sx:"Bowed legs, widened wrists, rachitic rosary along the ribs.",
+ labs:[["25-OH vitamin D","12 nmol/L","≥50","L"],["Alkaline phosphatase","980 U/L","150–420","H"],["Calcium","2.0 mmol/L","2.2–2.6","L"],["Phosphate","0.9 mmol/L","1.2–1.8","L"],["PTH","High","Normal","H"]],
+ dx:{right:"Nutritional rickets (vitamin D deficiency)",wrongs:["Scurvy","Kwashiorkor","Hypothyroidism"],why:"Bone deformities with low vitamin D and calcium, high ALP and raised PTH indicate nutritional rickets."},
+ plan:{q:"Which treatment is appropriate?",right:"Vitamin D (cholecalciferol) loading course plus adequate dietary calcium, then maintenance",wrongs:["Vitamin C only","Iron only","High-dose vitamin A"],why:"Treat the deficiency and ensure calcium intake. High-dose vitamin A is toxic and does not treat rickets."}},
+{title:"Case: tired, thirsty, overweight",pt:"52-year-old man",hx:"BMI 33 with central obesity. 2 months of fatigue, polyuria and blurred vision. His father had diabetes.",sx:"Acanthosis nigricans at the neck. Urine ketones negative.",
+ labs:[["Fasting glucose","9.4 mmol/L","3.9–5.5","H"],["HbA1c","8.6% (70 mmol/mol)","<6.0%","H"],["Triglycerides","2.8 mmol/L","<1.7","H"],["Urine ketones","Negative","Negative",""]],
+ dx:{right:"Type 2 diabetes mellitus",wrongs:["Type 1 diabetes mellitus","Diabetes insipidus","Hyperthyroidism"],why:"Obesity, family history, high HbA1c and fasting glucose, acanthosis nigricans and absence of ketones suggest type 2 diabetes."},
+ plan:{q:"Which initial nutrition approach is best?",right:"Weight reduction with an energy deficit, regular carbohydrate spread across the day with low-GI choices and fibre, and fewer sugary drinks",wrongs:["Zero-carbohydrate diet","Skip meals to lower glucose","Replace meals with fruit juice"],why:"Even modest weight loss improves glycaemic control. Distributing carbohydrate and choosing low-GI, high-fibre foods helps."}}
+];
+
+// medications and supplements
+const MEDS = [
+["Suspected Wernicke encephalopathy in an alcohol-dependent patient. Typical IV thiamine dose?","At least 200 mg IV three times daily, given before glucose",["1 mg orally once daily","10 mg IM weekly","5 g as a single IV dose"],"High-dose parenteral thiamine is needed because oral absorption is poor in alcohol dependence."],
+["Refeeding prophylaxis in a high-risk patient. Appropriate supplementation?","Thiamine 200–300 mg orally daily plus a balanced multivitamin and trace elements",["Thiamine 1 mg weekly","Vitamin C 10 g daily","High-dose vitamin D only"],"Thiamine is started before feeding and continued for the first 10 days."],
+["A woman planning pregnancy with no extra risk factors. Standard folic acid dose?","400 µg (0.4 mg) daily, before conception until 12 weeks",["5 mg daily","4 g daily","No supplement needed"],"Folic acid reduces neural tube defects."],
+["A woman on antiepileptics or with a previous neural tube defect pregnancy. Folic acid dose?","5 mg daily, from before conception until 12 weeks",["400 µg daily (standard-risk dose)","50 mg daily","100 µg weekly"],"Higher risk needs a higher dose, which should be prescribed."],
+["WHO recommends daily iron and folic acid in pregnancy. The dose is:","30–60 mg elemental iron plus 400 µg folic acid daily",["300 mg elemental iron daily","1 mg elemental iron weekly","Iron only, after delivery"],"This is the WHO antenatal supplementation standard."],
+["An adult with iron-deficiency anaemia starts oral ferrous sulfate. Best regimen and advice?","200 mg (about 65 mg elemental iron) once daily or on alternate days, with vitamin C and apart from tea and antacids",["200 mg four times daily with tea and milk","1 g daily with a calcium supplement","IV iron for every patient"],"Single daily or alternate-day dosing improves absorption and tolerance."],
+["Pernicious anaemia without neurological involvement. Initial hydroxocobalamin regimen?","1 mg IM on alternate days for 2 weeks, then 1 mg every 3 months",["1 mg IM daily for life","50 µg orally once weekly","A single 1 mg injection, then nothing"],"Loading replaces stores. Lifelong maintenance is needed because intrinsic factor is absent."],
+["An adult with vitamin D deficiency. Typical treatment?","A loading course (for example 50,000 IU weekly for 6–8 weeks), then maintenance of 800–2,000 IU daily",["50,000 IU daily for life","100 IU once a month","No treatment unless a fracture occurs"],"Loading corrects the deficit. Maintenance prevents relapse."],
+["WHO advice for zinc in a child over 6 months with acute diarrhoea:","20 mg per day for 10–14 days",["100 mg per day for 3 days","5 mg as a single dose","20 mg weekly for 4 weeks"],"Zinc reduces the duration and severity of diarrhoea and lowers later episodes."],
+["A child aged 12 months or more with measles. WHO vitamin A advice?","200,000 IU orally once daily for 2 consecutive days",["2,000 IU once","1 million IU daily for a week","None, since vitamin A is harmful in infection"],"Vitamin A reduces measles complications and mortality. Infants 6–11 months get 100,000 IU."],
+["Prevention of vitamin K deficiency bleeding in a term newborn:","1 mg IM at birth",["10 mg IM monthly","100 mg orally weekly","None needed if breastfed"],"Newborns have low vitamin K stores. Breast milk is a poor source."],
+["Lactulose in hepatic encephalopathy is titrated to produce:","2–3 soft stools per day (commonly 30–45 mL two to three times daily)",["No stools, since constipation is the goal","6–8 watery stools per day","One hard stool every 3 days"],"Lactulose acidifies the gut lumen and traps ammonia. Watery diarrhoea causes dehydration and worsens encephalopathy."],
+["In exocrine pancreatic insufficiency, when should pancreatic enzyme capsules (for example Creon) be taken?","With the first mouthfuls of meals and snacks that contain fat, with dose matched to the fat content",["Once at bedtime on an empty stomach","Only with fluids between meals","30 minutes after finishing a meal"],"Enzymes must mix with food to digest fat. Doses are adjusted to fat intake and symptoms."],
+["Calcium acetate or sevelamer (phosphate binders) in CKD should be taken:","With meals, to bind dietary phosphate",["On an empty stomach at bedtime only","Two hours after meals","Only on non-dialysis days"],"Binders must be in the gut at the same time as food phosphate."],
+["Counselling for levothyroxine in a patient also taking iron and calcium:","Take on an empty stomach 30–60 minutes before breakfast and separate from iron and calcium by about 4 hours",["Take with the iron tablet to improve absorption","Take with a large breakfast and coffee","Take with the calcium supplement at lunch"],"Iron, calcium, coffee and food reduce levothyroxine absorption."],
+["A patient on warfarin eats green leafy vegetables. Dietitian's advice?","Keep vitamin K intake consistent and avoid sudden large changes",["Avoid all green vegetables","Eat as many greens as possible before INR tests","Vitamin K intake is irrelevant"],"Vitamin K counteracts warfarin, so steady intake keeps the INR stable."],
+["Counselling for a patient with type 2 diabetes starting metformin:","Take with meals to reduce stomach upset, and monitor B12 with long-term use",["Take only while fasting","Avoid all carbohydrate while on it","Double the dose if you skip a meal"],"Metformin commonly causes GI upset and long-term use can lower vitamin B12."],
+["Why does WHO low-osmolarity ORS contain glucose?","Sodium–glucose co-transport in the gut drives absorption of sodium and water",["To supply most of the daily energy needs","To treat hypoglycaemia","To neutralise stomach acid"],"The SGLT1 transporter moves sodium and glucose together, with water following."],
+["Dosing for hypoglycaemia in a conscious patient:","15–20 g of fast-acting carbohydrate, with glucose rechecked in 15 minutes",["50 g of fat as a chocolate bar","Insulin 10 units","No treatment if the patient is awake"],"Fast-acting sugar is quickest. Fat delays absorption."],
+["Oral nutritional supplements (sip feeds) are best used for:","Patients at risk of malnutrition who can eat but not meet needs from food alone",["Patients with a completely non-functioning gut","Replacing all meals in healthy adults","Patients who are nil by mouth"],"If the gut works, use it. A non-functioning gut needs parenteral nutrition."]
+];
+
+/* ================= STATE ================= */
+const KEY = "nutrition_quest_v1";
+const LEVELS = [[0,"Student Dietitian"],[100,"Ward Intern"],[300,"Junior Dietitian"],[600,"Clinical Dietitian"],[1000,"Senior Dietitian"],[1600,"Consultant"]];
+const BADGES = {
+  first:["🥇","First Round"],perfect:["💯","Perfect Round"],streak5:["🔥","5-Streak"],streak10:["⚡","10-Streak"],
+  cases:["🕵️","Case Cracker"],pharm:["💊","Pharmacist"],ward:["🛡️","Ward Survivor"],xp500:["⭐","Rising Star"]
+};
+const def = () => ({xp:0,bestStreak:0,rounds:0,answered:0,correct:0,badges:[],mode:{}});
+let S = load();
+function load(){ try{ const d=JSON.parse(localStorage.getItem(KEY)); if(d) return Object.assign(def(),d); }catch(e){} return def(); }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+
+function level(){ let i=0; LEVELS.forEach((l,k)=>{ if(S.xp>=l[0]) i=k; }); const next=LEVELS[i+1]; return {name:LEVELS[i][1],i,next,from:LEVELS[i][0]}; }
+function drawXP(){
+  const L=level(), w = L.next ? pct(S.xp-L.from, L.next[0]-L.from) : 100;
+  $("#xp").innerHTML = `${esc(L.name)} · ${S.xp} XP${L.next?` <span style="opacity:.8">(next: ${L.next[0]})</span>`:""}<div class="bar"><i style="width:${w}%"></i></div>`;
+}
+
+/* ================= ROUND BUILDING ================= */
+function fromTuple(t,tag){ return {q:t[0],right:t[1],wrongs:t[2],why:t[3],tag}; }
+function jargonItems(n){
+  return shuffle(JARGON).slice(0,n).map(([t,d])=>{
+    const others = shuffle(JARGON.filter(x=>x[0]!==t));
+    if(Math.random()<.5) return {q:`What does <b>${esc(t)}</b> mean?`,right:d,wrongs:others.slice(0,3).map(x=>x[1]),why:`${t}: ${d}.`,tag:"Jargon"};
+    return {q:`Which term means: “${esc(d)}”?`,right:t,wrongs:others.slice(0,3).map(x=>x[0]),why:`${t}: ${d}.`,tag:"Jargon"};
+  });
+}
+function caseCard(c,showDx){
+  const labs = c.labs.map(l=>`<tr><td>${esc(l[0])}</td><td class="${l[3]}">${esc(l[1])}${l[3]?" "+(l[3]==="H"?"▲":"▼"):""}</td><td class="muted">${esc(l[2])}</td></tr>`).join("");
+  return `<div class="case"><h3>${esc(c.title)}</h3><p><b>${esc(c.pt)}</b></p><p><b>History:</b> ${esc(c.hx)}</p><p><b>Symptoms and signs:</b> ${esc(c.sx)}</p>
+  <table><tr><th>Lab</th><th>Result</th><th>Reference</th></tr>${labs}</table>${showDx?`<p style="margin-top:8px"><b>Working diagnosis:</b> ${esc(c.dx.right)}</p>`:""}</div>`;
+}
+function caseItems(n){
+  return shuffle(CASES).slice(0,n).flatMap(c=>[
+    {ctx:caseCard(c,false),q:"What is the most likely diagnosis?",right:c.dx.right,wrongs:c.dx.wrongs,why:c.dx.why,pts:15,tag:"Diagnosis"},
+    {ctx:caseCard(c,true),q:c.plan.q,right:c.plan.right,wrongs:c.plan.wrongs,why:c.plan.why,pts:15,tag:"Management"}]);
+}
+const condItems = n => shuffle(COND).slice(0,n).map(t=>fromTuple(t,"Conditions"));
+const medItems  = n => shuffle(MEDS).slice(0,n).map(t=>fromTuple(t,"Meds"));
+
+const MODES = {
+  jargon:{name:"Jargon Blitz",icon:"📖",desc:"Match medical terms with their meanings.",build:()=>jargonItems(10)},
+  cond:{name:"Ward Conditions",icon:"🏥",desc:"Nutrition management of conditions seen on the wards.",build:()=>condItems(8)},
+  cases:{name:"Case Files",icon:"🕵️",desc:"History, symptoms and labs. Diagnose, then manage. 3 cases.",build:()=>caseItems(3)},
+  meds:{name:"Meds & Supplements",icon:"💊",desc:"Indications, doses and counselling for drugs and supplements.",build:()=>medItems(8)},
+  ward:{name:"Ward Round Challenge",icon:"🛡️",desc:"Mixed questions and a full case with 3 lives. How far can you go?",lives:3,
+    build:()=>shuffle([...jargonItems(4),...condItems(3),...medItems(3)]).concat(caseItems(1))}
+};
+
+/* ================= GAME FLOW ================= */
+let R = null;
+function start(mode){
+  const M = MODES[mode];
+  const items = M.build().map(it=>Object.assign({pts:10},it,{opts:shuffle([it.right,...it.wrongs])}));
+  R = {mode,items,i:0,score:0,streak:0,maxStreak:0,xpGain:0,lives:M.lives||0,wrong:[],answered:false};
+  drawQ();
+}
+function drawQ(){
+  const it=R.items[R.i], M=MODES[R.mode];
+  const lives = M.lives ? `<span class="lives">${"❤️".repeat(R.lives)}${"🖤".repeat(M.lives-R.lives)}</span>` : "";
+  $("#app").innerHTML = `<div class="card">
+    <div class="top"><span><span class="tag">${esc(it.tag||M.name)}</span> Question ${R.i+1} of ${R.items.length}</span><span>${lives} 🔥 ${R.streak} · ${R.score} correct</span></div>
+    <div class="prog"><i style="width:${R.i/R.items.length*100}%"></i></div>
+    ${it.ctx||""}<div class="q">${it.q}</div>
+    <div id="opts">${it.opts.map((o,k)=>`<button class="opt" data-k="${k}">${k+1}. ${esc(o)}</button>`).join("")}</div>
+    <div id="fb"></div><div id="nx"></div></div>`;
+  R.answered=false;
+  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.k));
+}
+function answer(k){
+  if(!R||R.answered) return; R.answered=true;
+  const it=R.items[R.i], ok = it.opts[k]===it.right;
+  document.querySelectorAll(".opt").forEach((b,j)=>{ b.disabled=true; if(it.opts[j]===it.right) b.classList.add("right"); else if(j===k) b.classList.add("wrong"); });
+  S.answered++; const m=S.mode[R.mode]=S.mode[R.mode]||{a:0,c:0}; m.a++;
+  let msg;
+  if(ok){
+    R.score++; R.streak++; R.maxStreak=Math.max(R.maxStreak,R.streak); S.correct++; m.c++;
+    const pts = it.pts + Math.min(R.streak,5)*2; R.xpGain+=pts; S.xp+=pts; S.bestStreak=Math.max(S.bestStreak,R.streak);
+    msg = `<div class="fb ok"><b>Correct! +${pts} XP</b><p>${esc(it.why)}</p></div>`;
+  } else {
+    R.streak=0; if(R.lives) R.lives--; R.wrong.push(it);
+    msg = `<div class="fb no"><b>Not quite.</b> The answer is: ${esc(it.right)}<p>${esc(it.why)}</p></div>`;
+  }
+  save(); drawXP();
+  const last = R.i===R.items.length-1 || (MODES[R.mode].lives && R.lives===0);
+  $("#fb").innerHTML=msg;
+  $("#nx").innerHTML=`<button class="btn" id="next">${last?"See results":"Next ▶"}</button>`;
+  $("#next").onclick=()=>last?finish():(R.i++,drawQ()); $("#next").focus();
+}
+function finish(){
+  const n = R.i + 1 > R.items.length ? R.items.length : R.i + 1, M=MODES[R.mode];
+  const total = M.lives && R.lives===0 ? n : R.items.length;
+  S.rounds++;
+  const got=[], add=id=>{ if(!S.badges.includes(id)){ S.badges.push(id); got.push(id);} };
+  add("first");
+  if(R.score===total && total>=6) add("perfect");
+  if(S.bestStreak>=5) add("streak5"); if(S.bestStreak>=10) add("streak10");
+  if(R.mode==="cases" && R.score>=5) add("cases");
+  if(R.mode==="meds" && R.score>=7) add("pharm");
+  if(R.mode==="ward" && R.lives>0) add("ward");
+  if(S.xp>=500) add("xp500");
+  save(); drawXP();
+  const p=pct(R.score,total), word = p===100?"Flawless!":p>=80?"Excellent work!":p>=60?"Good effort. Review the misses below.":"Keep practising. Every mistake is a lesson.";
+  $("#app").innerHTML = `<div class="card" style="text-align:center"><div class="big">${R.score}/${total}</div><h2>${word}</h2>
+    <p class="muted">+${R.xpGain} XP · best streak this round: ${R.maxStreak}${M.lives&&R.lives===0?" · out of lives":""}</p>
+    ${got.length?`<p>New badge${got.length>1?"s":""}: ${got.map(b=>`<span class="badge">${BADGES[b][0]} ${BADGES[b][1]}</span>`).join("")}</p>`:""}
+    <div class="row" style="justify-content:center"><button class="btn" id="again">Play again</button><button class="btn sec" id="back">Home</button></div></div>
+    ${R.wrong.length?`<div class="card"><h2>Review your misses</h2>${R.wrong.map(w=>`<div class="rev">${w.ctx?"<i class='muted'>(case question)</i> ":""}<b>${w.q}</b><br>✔ ${esc(w.right)}<br><span class="muted">${esc(w.why)}</span></div>`).join("")}</div>`:""}`;
+  $("#again").onclick=()=>start(R.mode); $("#back").onclick=home; R=null;
+}
+
+/* ================= SCREENS ================= */
+function home(){
+  R=null;
+  $("#app").innerHTML = `<div class="card"><h2>Welcome to the ward, doctor-in-training.</h2>
+    <p class="muted">Learn medical jargon, nutrition management of ward conditions, diagnosis from cases, and medications and supplements. Earn XP, build streaks and collect badges. Progress is saved in this browser.</p></div>
+    <div class="modes">${Object.entries(MODES).map(([k,m])=>{const s=S.mode[k];return `<button class="mode" data-m="${k}"><b>${m.icon} ${m.name}</b><span>${m.desc}</span><br><span>${s?`Accuracy: ${pct(s.c,s.a)}% (${s.a} answered)`:"Not played yet"}</span></button>`}).join("")}
+      <button class="mode" id="gl"><b>🔎 Glossary</b><span>Search all ${JARGON.length} jargon terms to study before you play.</span></button></div>
+    <div class="card" style="margin-top:14px"><h2>Your stats</h2>
+      <p>Rounds: <b>${S.rounds}</b> · Questions: <b>${S.answered}</b> · Accuracy: <b>${pct(S.correct,S.answered)}%</b> · Best streak: <b>${S.bestStreak}</b></p>
+      <p>${S.badges.length?S.badges.map(b=>`<span class="badge">${BADGES[b][0]} ${BADGES[b][1]}</span>`).join(""):`<span class="muted">No badges yet. Finish a round to earn your first.</span>`}</p>
+      <button class="btn sec" id="reset">Reset progress</button></div>`;
+  document.querySelectorAll(".mode[data-m]").forEach(b=>b.onclick=()=>start(b.dataset.m));
+  $("#gl").onclick=glossary;
+  $("#reset").onclick=()=>{ if(confirm("Erase all XP, stats and badges in this browser?")){ S=def(); save(); drawXP(); home(); } };
+}
+function glossary(){
+  const sorted=JARGON.slice().sort((a,b)=>a[0].localeCompare(b[0]));
+  $("#app").innerHTML=`<div class="card"><div class="row" style="justify-content:space-between"><h2>Glossary</h2><button class="btn sec" id="b">← Home</button></div>
+    <input type="search" id="s" placeholder="Search terms or meanings" aria-label="Search glossary"><dl id="l"></dl></div>`;
+  const draw=q=>{ q=q.toLowerCase(); $("#l").innerHTML=sorted.filter(x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q)).map(x=>`<dt>${esc(x[0])}</dt><dd>${esc(x[1])}</dd>`).join("")||`<p class="muted">No matches.</p>`; };
+  draw(""); $("#s").oninput=e=>draw(e.target.value); $("#b").onclick=home;
+}
+
+document.addEventListener("keydown",e=>{
+  if(!R||e.target.tagName==="INPUT") return;
+  if(!R.answered && /^[1-4]$/.test(e.key)){ const b=document.querySelectorAll(".opt")[+e.key-1]; if(b) answer(+e.key-1); }
+  else if(R.answered && (e.key==="Enter"||e.key===" ")){ const n=$("#next"); if(n){ e.preventDefault(); n.click(); } }
+});
+$("#home").onclick=()=>{ if(!R||confirm("Leave this round? Progress in the round will be lost.")) home(); };
+drawXP(); home();
+</script>
+</body>
+</html>
