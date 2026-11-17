@@ -2,7 +2,8 @@
 
 A browser game that helps nutrition and dietetics students learn clinical nutrition. It is a single `index.html` file with no build step and no dependencies.
 
-> Educational use only. Cases are fictional. Doses and targets reflect common adult or WHO reference values; always check your local formulary and protocols. Live Demo: https://naire-arch.github.io/NutriMedDx/
+> Educational use only. Cases are fictional. Doses and targets reflect common adult or WHO reference values; always check your local formulary and protocols.
+> Live Demo: https://naire-arch.github.io/NutrimedDX/
 
 ## Game modes
 - **Jargon Blitz:** 44 medical terms, asked as term-to-meaning and meaning-to-term
