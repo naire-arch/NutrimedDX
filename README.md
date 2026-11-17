@@ -1,8 +1,8 @@
-# NutrimedDx ward quest 🩺
+# NutrimedDx🩺
 
 A browser game that helps nutrition and dietetics students learn clinical nutrition. It is a single `index.html` file with no build step and no dependencies.
 
-> Educational use only. Cases are fictional. Doses and targets reflect common adult or WHO reference values; always check your local formulary and protocols.
+> Educational use only. Cases are fictional. Doses and targets reflect common adult or WHO reference values; always check your local formulary and protocols. Live Demo: https://naire-arch.github.io/NutriMedDx/
 
 ## Game modes
 - **Jargon Blitz:** 44 medical terms, asked as term-to-meaning and meaning-to-term
@@ -13,10 +13,6 @@ A browser game that helps nutrition and dietetics students learn clinical nutrit
 - **Glossary:** searchable study list of all jargon terms
 
 XP, streak bonuses, levels (Student Dietitian to Consultant) and badges are saved in the browser's `localStorage`. Keyboard: press 1–4 to answer and Enter for the next question.
-
-## Run it
-- Locally: open `index.html` in a browser.
-- GitHub Pages: upload `index.html` and `README.md` to a repo, then **Settings → Pages → Deploy from a branch → main / (root)**.
 
 ## Add your own questions
 All content is at the top of the `<script>` in `index.html`:
